@@ -1,0 +1,15 @@
+.drag {
+	-webkit-app-region: drag;
+}
+
+.no-sel {
+	-webkit-user-select: none;
+}
+
+button,
+.btn,
+a,
+.no-drag {
+	-webkit-app-region: no-drag !important;
+	cursor: pointer !important;
+}

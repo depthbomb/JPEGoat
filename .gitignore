@@ -1,0 +1,11 @@
+!.gitignore
+release-builds
+package-lock.json
+node_modules
+app/node_modules
+app/assets
+app/i18n
+app/templates
+app/build-info.json
+app/index.js
+app/package-lock.json
