@@ -1,6 +1,5 @@
 #sidebar {
-
-	$sidebarWidth: 250px;
+	$sidebarWidth: 225px;
 	$sidebarBg: theme-color('darker');
 	$linkBg: darken($sidebarBg, 3%);
 
@@ -18,7 +17,7 @@
 	.sidebar-header {
 		padding: 20px;
 		background: theme-color('dark');
-		border-right: 2px solid $sidebarBg;
+		border-right: 3px solid $sidebarBg;
 		border-top-left-radius: 5px;
 
 		h3 {
@@ -34,14 +33,19 @@
 	}
 
 	ul {
+		padding-left: 0;
+		list-style: none;
+
 		&.components {
 			padding: 20px 0;
 			border-bottom: 1px solid darken($sidebarBg, 5%);
 		}
+		
 		p {
 			color: #fff;
 			padding: 10px;
 		}
+
 		li {
 			a {
 				display: block;
@@ -56,13 +60,27 @@
 				}
 			}
 
-			ul > li > a {
-				font-size: 0.9em;
-				padding-left: 30px;
-				background-color: darken($sidebarBg, 5%);
+			ul.sidebar-dropdown-menu {
+				padding-left: 0;
+				max-height: 0;
+				list-style: none;
+				overflow: hidden;
 
-				&:hover {
-					background-color: darken($sidebarBg, 7.5%);
+				-webkit-transition: max-height 200ms ease;
+				transition: max-height 200ms ease;
+
+				&.open {
+					max-height: 200px;
+				}
+
+				> li > a {
+					font-size: 0.9em;
+					padding-left: 30px;
+					background-color: darken($sidebarBg, 5%);
+
+					&:hover {
+						background-color: darken($sidebarBg, 7.5%);
+					}
 				}
 			}
 

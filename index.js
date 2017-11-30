@@ -4,7 +4,9 @@ const url = require('url');
 const fs = require('fs-extra');
 const path = require('path');
 const { machineIdSync } = require('node-machine-id');
+const jimp = require('jimp');
 const ini = require('ini');
+const cuid = require('cuid');
 const async = require('async');
 const machineId = machineIdSync({ original: true }), machineHash = machineIdSync();
 const crypto = require('crypto'),
@@ -29,14 +31,14 @@ const programFiles = process.env.hasOwnProperty('ProgramFiles(x86)') ? process.e
 ,		defaultConfig = {
 			app: {
 				locale: 'en',
-				outputPath: defaultOutput,
-				imgur: {
-					enabled: false,
-					username: null,
-					password: null,
-					client: null,
-					album: null
-				}
+				outputPath: defaultOutput
+			},
+			imgur: {
+				enabled: false,
+				username: null,
+				password: null,
+				client: null,
+				album: null
 			}
 }
 
@@ -182,6 +184,34 @@ app.on('before-quit', () => {
 
 /*
 |--------------------------------------------------------------------------
+|	Open image picker dialog
+|--------------------------------------------------------------------------
+*/
+ipcMain.on('choose-image', (event, arg) => {
+	let filters = [ { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'bmp'] } ];
+	let props = [ 'openFile' ];
+	if (arg) {
+		dialog.showOpenDialog({ filters: filters, properties: props }, (files) => {
+			if (files) {
+				event.sender.send('image-processing');
+				let image = files[0];
+				jimp.read(image, (err, img) => {
+					if (err) event.sender.send('generic-error', 'Invalid file type');
+					let newFilename = `JPEGoat_${cuid()}.jpg`;
+					img.quality(1).dither565().write(path.join(clientConfig.app.outputPath, newFilename));
+					event.sender.send('image-processing-success');
+				});
+			}
+		});
+	}
+})
+/*
+|---------------------------------------------------------------------------
+*/
+
+
+/*
+|--------------------------------------------------------------------------
 |	Send any data to the renderer that it cannot obtain itself, such as the
 |	config directory
 |--------------------------------------------------------------------------
@@ -233,7 +263,7 @@ ipcMain.on('win.minimize', (event) => {
 });
 ipcMain.on('win.maximize', (event) => {
 	let mw = BrowserWindow.fromId(mainWindow.id);
-	if (mw.isMaximized()) mw.unmaximize();	
+	if (mw.isMaximized()) mw.unmaximize();
 	else mw.maximize();
 });
 ipcMain.on('win.close', (event) => {

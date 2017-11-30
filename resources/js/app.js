@@ -8,7 +8,6 @@ const path = require('path');
 const $ = require('jquery-slim');
 const m = require('mithril');
 const moment = require('moment');
-const jimp = require('jimp');
 const ini = require('ini');
 
 const build = require('../build-info.json');
@@ -39,6 +38,7 @@ ipcRenderer.on('requested-client-data', (event, data) => {
 	rendererConfig = data;
 });
 
+
 /**
 * Save settings and redirect to main screen
 */
@@ -51,4 +51,20 @@ ipcRenderer.on('save-settings-success', (event, data) => {
 		});
 		document.location.href = '#!/';
 	}
+});
+
+
+/**
+* TODO
+*/
+ipcRenderer.on('image-processing', (event) => {
+	document.querySelector('.input-trigger').classList.add('disabled');
+});
+ipcRenderer.on('image-processing-success', (event) => {
+	document.querySelector('.input-trigger').classList.remove('disabled');
+	remote.dialog.showMessageBox({
+		type: 'info',
+		title: 'Success',
+		message: 'Image successfully JPEG-ified!'
+	});
 });

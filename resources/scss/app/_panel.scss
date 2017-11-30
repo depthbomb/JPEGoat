@@ -1,10 +1,10 @@
 .wrapper {
 	display: flex;
 	align-items: stretch;
-	height: calc(100vh - #{$titleBarHeight});
-	border-right: 2px solid $titleBarColor;
-	border-bottom: 2px solid $titleBarColor;
-	border-left: 2px solid $titleBarColor;
+	height: $wrapperHeight;
+	border-color: $titleBarColor;
+	border-style: solid;
+	border-width: 0 3px;
 
 	.content {
 		width: 100%;
@@ -13,5 +13,36 @@
 		border-top-right-radius: 5px;
 		border-bottom-right-radius: 5px;
 		border-bottom-left-radius: 5px;
+
+		.input-trigger {
+			display: block;
+			padding: 10px;
+			width: 100%;
+			height: auto;
+			color: #fff;
+			font-size: 25px;
+			text-align: center;
+			text-decoration: none;
+			border: 1px solid darken(theme-color('primary'), 12%);
+			border-radius: 6px;
+			background: -webkit-linear-gradient(top, theme-color('primary') 0%, darken(theme-color('primary'), 12%) 100%);
+			background: linear-gradient(top, theme-color('primary') 0%, darken(theme-color('primary'), 12%) 100%);
+
+			-webkit-box-shadow: inset 0px 1px 0px 0px rgba(255, 255, 255, 0.2);
+			box-shadow : inset 0px 1px 0px 0px rgba(255, 255, 255, 0.2);
+
+			@include no-select();
+
+			&.disabled {
+				opacity: 0.66;
+				cursor: not-allowed;
+				pointer-events: none;
+			}
+
+			&:hover {
+				background: -webkit-linear-gradient(top, lighten(theme-color('primary'), 8%) 0%, theme-color('primary') 100%);
+				background: linear-gradient(top, lighten(theme-color('primary'), 8%) 0%, theme-color('primary') 100%);
+			}
+		}
 	}
 }

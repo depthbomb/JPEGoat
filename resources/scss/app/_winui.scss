@@ -21,7 +21,7 @@
 	background-color: $titleBarColor;
 
 	.titlebar-title {
-		padding-left: 6px;
+		padding-left: 8px;
 		width: 100vw;
 		height: $titleBarHeight;
 		font-size: $titleBarHeight / 2;
@@ -65,6 +65,36 @@
 					color: #fff;
 				}
 			}
+		}
+	}
+}
+
+#footer {
+	-webkit-box-direction: reverse;
+	-webkit-box-orient: horizontal;
+	-webkit-box-align: stretch;
+	-webkit-box-pack: start;
+
+	display: flex;
+	flex-direction: row-reverse;
+	flex-wrap: nowrap;
+	justify-content: flex-start;
+	align-items: stretch;
+
+	width: 100vw;
+	height: $footerHeight;
+	line-height: $footerHeight;
+
+	.footer-grabber {
+		display: flex;
+		width: $footerHeight;
+		height: $footerHeight;
+		text-align: center;
+
+		> .icon {
+			width: $footerHeight;
+			height: $footerHeight;
+			color: $gray-600;
 		}
 	}
 }

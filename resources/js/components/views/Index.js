@@ -5,11 +5,12 @@ exports.Index = {
 	},
 	view: () => {
 		return m(Layout, [
-			m(".card.bg-darker.text-light", [
-				m(".card-body", [
-					m('input[type="file"]')
+			m('a.input-trigger[href="javascript:;"]', { onclick: () => {
+					ipcRenderer.send('choose-image', true);
+				} }, [
+					m('span.icon.icon-upload'),
+					' Choose Image'
 				])
-			])
 		])
 	}
 }

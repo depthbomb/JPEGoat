@@ -1,2 +1,7 @@
 $titleBarHeight: 28px;
 $titleBarColor: theme-color('darker');
+
+$footerHeight: 28px;
+$footerColor: theme-color('darker');
+
+$wrapperHeight: calc(100vh - #{$titleBarHeight} - #{$footerHeight});
