@@ -1,7 +1,4 @@
 #titlebar {
-	$titleBarHeight: 26px;
-	$titleBarColor: theme-color('darker');
-
 	z-index: 2147483647;	//	Just to make sure it stays on top
 
 	-webkit-user-select: none;
@@ -53,6 +50,12 @@
 
 			&:nth-child(1) > .icon {	//	Move the minimize icon down
 				vertical-align: sub;
+			}
+
+			&:nth-child(3) {
+				&:hover {
+					background-color: theme-color('danger');
+				}
 			}
 
 			&:hover {

@@ -4,14 +4,13 @@
 	font-smoothing: antialiased;
 }
 
-body {
-	background-color: theme-color('dark');
-	font-family: 'Lato', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue";
-	overflow: hidden;
+html {
+	background-color: transparent;
 }
 
-.content {
+body {
 	width: 100vw;
-	height: 100vh;
-	overflow-y: auto;
+	font-family: 'Lato', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue";
+	background-color: transparent;
+	overflow: hidden;
 }

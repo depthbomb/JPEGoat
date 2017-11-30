@@ -1,4 +1,17 @@
 .wrapper {
 	display: flex;
 	align-items: stretch;
+	height: calc(100vh - #{$titleBarHeight});
+	border-right: 2px solid $titleBarColor;
+	border-bottom: 2px solid $titleBarColor;
+	border-left: 2px solid $titleBarColor;
+
+	.content {
+		width: 100%;
+		overflow-y: auto;
+		background-color: theme-color('dark');
+		border-top-right-radius: 5px;
+		border-bottom-right-radius: 5px;
+		border-bottom-left-radius: 5px;
+	}
 }

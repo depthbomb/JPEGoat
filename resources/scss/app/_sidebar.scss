@@ -6,9 +6,9 @@
 
 	max-width: $sidebarWidth;
 	min-width: $sidebarWidth;
-	height: 100vh;
-	background: $sidebarBg;
+	flex-direction: column;
 	color: #fff;
+	background: $sidebarBg;
 	transition: margin-left 250ms;
 
 	&.closed {
@@ -18,7 +18,8 @@
 	.sidebar-header {
 		padding: 20px;
 		background: theme-color('dark');
-		border-right: 1px solid $sidebarBg;
+		border-right: 2px solid $sidebarBg;
+		border-top-left-radius: 5px;
 
 		h3 {
 			margin: 0;

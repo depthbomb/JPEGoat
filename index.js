@@ -25,6 +25,7 @@ const programFiles = process.env.hasOwnProperty('ProgramFiles(x86)') ? process.e
 ,		tmpDir = path.join(projectDir, 'tmp')
 ,		userConfigFile = path.join(userConfigDir, 'settings.ini')
 ,		defaultOutput = path.join(app.getPath('pictures'), 'JPEGoat')
+,		appBlack = '#212529'
 ,		defaultConfig = {
 			app: {
 				locale: 'en',
@@ -72,14 +73,17 @@ const initializer = () => {
 const loadMain = (cb) => {
 	console.log('Loading main window...');
 	mainWindow = new BrowserWindow({
-		minWidth: 720,
-		minHeight: 480,
+		minWidth: 800,
+		minHeight: 400,
+		backgroundColor: appBlack,
 		frame: false,
+		useContentSize: true,
 		show: false
 	});
 	mainWindow.loadURL(`${templatesDir}/main.html`);
 
 	mainWindow.on('ready-to-show', () => {
+		console.log('Main window loaded!');
 		cb(null);
 	});
 };
@@ -229,7 +233,7 @@ ipcMain.on('win.minimize', (event) => {
 });
 ipcMain.on('win.maximize', (event) => {
 	let mw = BrowserWindow.fromId(mainWindow.id);
-	if (mw.isMaximized()) mw.unmaximize();
+	if (mw.isMaximized()) mw.unmaximize();	
 	else mw.maximize();
 });
 ipcMain.on('win.close', (event) => {
