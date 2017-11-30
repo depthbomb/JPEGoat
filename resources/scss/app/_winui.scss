@@ -1,0 +1,67 @@
+#titlebar {
+	$titleBarHeight: 26px;
+	$titleBarColor: theme-color('darker');
+
+	z-index: 2147483647;	//	Just to make sure it stays on top
+
+	-webkit-user-select: none;
+	-webkit-app-region: drag;
+
+	-webkit-box-direction: reverse;
+	-webkit-box-orient: horizontal;
+	-webkit-box-align: stretch;
+	-webkit-box-pack: start;
+
+	display: flex;
+	flex-direction: row-reverse;
+	flex-wrap: nowrap;
+	justify-content: flex-start;
+	align-items: stretch;
+	width: 100vw;
+	height: $titleBarHeight;
+	line-height: $titleBarHeight;
+	color: $gray-500;
+	background-color: $titleBarColor;
+
+	.titlebar-title {
+		padding-left: 6px;
+		width: 100vw;
+		height: $titleBarHeight;
+		font-size: $titleBarHeight / 2;
+	}
+
+	.titlebar-buttons {
+		display: flex;
+		align-items: stretch;
+		width: $titleBarHeight * 3; //	3 buttons at 30x30 each
+		height: $titleBarHeight;
+
+		> a.titlebar-button {
+			width: $titleBarHeight;
+			height: $titleBarHeight;
+			text-align: center;
+			-webkit-transition: background-color 200ms ease-in-out;
+
+			> .icon {
+				width: ($titleBarHeight / 2);
+				height: ($titleBarHeight / 2);
+				color: $gray-500;
+				text-decoration: none;
+				-webkit-transition: color 200ms ease-in-out;
+				transition: color 200ms ease-in-out;
+			}
+
+			&:nth-child(1) > .icon {	//	Move the minimize icon down
+				vertical-align: sub;
+			}
+
+			&:hover {
+				background-color: lighten($titleBarColor, 5.5%);
+
+				& > .icon {
+					color: #fff;
+				}
+			}
+		}
+	}
+}

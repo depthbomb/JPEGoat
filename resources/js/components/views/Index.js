@@ -1,5 +1,8 @@
 import { Layout } from './_Layout';
 exports.Index = {
+	oncreate: () => {
+		document.querySelector('.titlebar-title').innerHTML = 'Home';
+	},
 	view: () => {
 		return m(Layout, [
 			m(".container-fluid",

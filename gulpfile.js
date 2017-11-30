@@ -66,6 +66,7 @@ const appObTemplate = [
 	"eval(a(r(s)));"
 ].join("");
 
+
 const reverse = (string) => {
 	// Step 1. Create an empty string that will host the new created string
 	var newString = "";
@@ -90,6 +91,7 @@ const reverse = (string) => {
 	// Step 3. Return the reversed string
 	return newString; // "olleh"
 };
+
 
 const uid = (length) => {
 	const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -119,7 +121,6 @@ gulp.task('es6', () => {
 	])
 	.pipe(replace(/\/\*![\s\S](.*)[\s\S]\*\//gi, ''))
 	.pipe(babel())
-	.pipe(header("/*!Nosey little sucker, aren't ya?*/"))
 	.pipe(ob())
 	.pipe(intercept(file => {
 		let encodedScript = reverse(btoa(file.contents));
@@ -128,27 +129,25 @@ gulp.task('es6', () => {
 		return file;
 	}))
 	.pipe(ob())
-	.pipe(header(assetHeader))
 	.pipe(gulp.dest(`${buildDir}/js`));
 
 });
+
 
 gulp.task('app', () => {
 	return gulp.src([
 		`./index.js`
 	])
 	.pipe(replace(/\/\*![\s\S](.*)[\s\S]\*\//gi, ''))
-	// .pipe(babel())
-	// .pipe(header("/*!Nosey little sucker, aren't ya?*/"))
-	// .pipe(ob())
-	// .pipe(intercept(file => {
-	// 	let encodedScript = reverse(btoa(file.contents));
-	// 	let evaluator = appObTemplate.replace('%%BASE64%%', encodedScript);
-	// 	file.contents = new Buffer(evaluator, 'utf8');
-	// 	return file;
-	// }))
-	// .pipe(ob())
-	.pipe(header(assetHeader))
+	.pipe(babel())
+	.pipe(ob())
+	.pipe(intercept(file => {
+		let encodedScript = reverse(btoa(file.contents));
+		let evaluator = appObTemplate.replace('%%BASE64%%', encodedScript);
+		file.contents = new Buffer(evaluator, 'utf8');
+		return file;
+	}))
+	.pipe(ob())
 	.pipe(gulp.dest(`./app`));
 
 });
@@ -277,7 +276,8 @@ gulp.task('cleanup', () => {
 
 gulp.task('cleanupThumbsDB', () => {
 	gulp.src([
-		`./app/assets/img/**/**/*.db`
+		`./app/assets/img/**/**/*.db`,
+		`./resources/img/**/**/*.db`
 	])
 	.pipe(intercept(file => {
 		fs.unlink(file.path, () => {

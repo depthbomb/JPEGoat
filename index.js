@@ -62,23 +62,19 @@ const initializer = () => {
 	});
 };
 
+
+
+/*
+|--------------------------------------------------------------------------
+|	Startup functions
+|--------------------------------------------------------------------------
+*/
 const loadMain = (cb) => {
 	console.log('Loading main window...');
-	const menuBar = [{
-		label: 'File',
-		submenu: [{
-			label: 'Quit',
-			click: () => {
-				app.quit();
-			}
-		}]
-	}];
-
-	// Menu.setApplicationMenu(Menu.buildFromTemplate(menuBar));
-
 	mainWindow = new BrowserWindow({
 		minWidth: 720,
 		minHeight: 480,
+		frame: false,
 		show: false
 	});
 	mainWindow.loadURL(`${templatesDir}/main.html`);
@@ -87,7 +83,6 @@ const loadMain = (cb) => {
 		cb(null);
 	});
 };
-
 const createSplash = (cb) => {
 	console.log('Creating splash screen...');
 	splashScreen = new BrowserWindow({
@@ -106,7 +101,6 @@ const createSplash = (cb) => {
 		cb(null);
 	});
 };
-
 const createDirs = (cb) => {
 	console.log('Checking required directories...');
 	let requiredDirs = [
@@ -129,7 +123,6 @@ const createDirs = (cb) => {
 
 	cb(null);
 };
-
 const checkConfig = (cb) => {
 	console.log('Starting config creator...');
 	let configFile = userConfigFile;
@@ -142,24 +135,28 @@ const checkConfig = (cb) => {
 
 	cb(null);
 };
-
 const loadConfig = (cb) => {
 	console.log('Loading client config...');
 	clientConfig = ini.parse(fs.readFileSync(userConfigFile, 'utf-8'));
 	cb(null);
 };
-
 const destroySplash = (cb) => {
 	console.log('Destroying splash...');
 	splashScreen.destroy();
 	splashScreen = null;
 	cb(null);
 };
+/*
+|---------------------------------------------------------------------------
+*/
 
 
 
-
-
+/*
+|--------------------------------------------------------------------------
+|	Core app events
+|--------------------------------------------------------------------------
+*/
 app.on('ready', initializer);
 app.on('window-all-closed', () => {
 	// On macOS it is common for applications and their menu bar
@@ -167,28 +164,45 @@ app.on('window-all-closed', () => {
 	// if (process.platform !== 'darwin') {
 	// 	app.quit(1);
 	// }
-	app.quit(1);
+	app.quit();
 });
 app.on('before-quit', () => {
 	console.log('Caught [before-quit]');
+	//TODO: any cleaning up that needs to be done
 });
+/*
+|---------------------------------------------------------------------------
+*/
 
 
 
-/**
- * Catch client data requests from the renderer process
- */
+/*
+|--------------------------------------------------------------------------
+|	Send any data to the renderer that it cannot obtain itself, such as the
+|	config directory
+|--------------------------------------------------------------------------
+*/
 ipcMain.on('request-client-data', (event, arg) => {
 	if (arg) {
 		console.log('Received client data request, sending client data to renderer');
 		event.sender.send('requested-client-data', {
 			dirs: {
-				config: configDir
+				config: userConfigDir
 			}
 		});
 	}
 });
+/*
+|---------------------------------------------------------------------------
+*/
 
+
+
+/*
+|--------------------------------------------------------------------------
+|	Save config settings
+|--------------------------------------------------------------------------
+*/
 ipcMain.on('save-settings', (event, arg) => {
 	if (typeof arg === 'object') {
 		fs.writeFile(path.join(configDir, 'client.ini'), ini.stringify(arg), 'utf-8', (err) => {
@@ -199,17 +213,62 @@ ipcMain.on('save-settings', (event, arg) => {
 		});
 	}
 });
+/*
+|---------------------------------------------------------------------------
+*/
 
-ipcMain.on('sys.quit', (event, arg) => {
-	if (arg) app.quit(1);
+
+
+/*
+|--------------------------------------------------------------------------
+|	Catch window control events from the renderer process
+|--------------------------------------------------------------------------
+*/
+ipcMain.on('win.minimize', (event) => {
+	BrowserWindow.fromId(mainWindow.id).minimize();	//	Use fromId() so we can specifically target a window
 });
+ipcMain.on('win.maximize', (event) => {
+	let mw = BrowserWindow.fromId(mainWindow.id);
+	if (mw.isMaximized()) mw.unmaximize();
+	else mw.maximize();
+});
+ipcMain.on('win.close', (event) => {
+	app.quit();
+});
+/*
+|---------------------------------------------------------------------------
+*/
 
-/**
- * Log messages sent from the render so it can be seen in the main terminal, mostly useful for debugging as there is no terminal when the application is used in production
- */
+
+
+/*
+|--------------------------------------------------------------------------
+|	Generic quit event, [arg] must be true
+|--------------------------------------------------------------------------
+*/
+ipcMain.on('sys.quit', (event, arg) => {
+	if (arg) app.quit();
+});
+/*
+|---------------------------------------------------------------------------
+*/
+
+
+
+/*
+|--------------------------------------------------------------------------
+|	Log messages to the main process terminal from the renderer, mostly
+|	useful for debugging as there is no terminal to see in the built binary
+|--------------------------------------------------------------------------
+*/
 ipcMain.on('log', (event, msg) => {
 	console.log('[Renderer]', msg);
 });
+/*
+|---------------------------------------------------------------------------
+*/
+
+
 
 const appCrypt = {
 	en: (data, algo, pass, cb) => {

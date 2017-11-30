@@ -1,14 +1,17 @@
 import { Layout } from '../_Layout';
-exports.Index = {
+exports.AppSettings = {
+	oncreate: () => {
+		document.querySelector('.titlebar-title').innerHTML = 'App Settings';
+	},
 	view: () => {
-		return m(Layout, [
-			m(".container-fluid",
+		return [
+			m(Layout, [
 				m(".card.bg-darker.text-light", [
 					m(".card-body", [
-						m('input[type="file"]')
+						m('h1', 'App settings')
 					])
 				])
-			)
-		])
+			])
+		]
 	}
 }
