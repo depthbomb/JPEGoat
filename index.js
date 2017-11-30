@@ -41,8 +41,8 @@ const programFiles = process.env.hasOwnProperty('ProgramFiles(x86)') ? process.e
 
 let clientConfig;
 
-let splashScreen;		//	Splash screen
-let mainWindow;		//	Main window
+let splashScreen;			//	Splash screen
+let mainWindow;			//	Main window
 
 const initializer = () => {
 	async.waterfall([
@@ -84,21 +84,6 @@ const loadMain = (cb) => {
 	mainWindow.loadURL(`${templatesDir}/main.html`);
 
 	mainWindow.on('ready-to-show', () => {
-		cb(null);
-	});
-};
-
-const loadNetChecker = (cb) => {
-	console.log('Loading net checker window...');
-
-	netChecker = new BrowserWindow({
-		width: 0,
-		weight: 0,
-		show: false
-	});
-	netChecker.loadURL(`${templatesDir}/netChecker.html`);
-
-	netChecker.on('ready-to-show', () => {
 		cb(null);
 	});
 };
