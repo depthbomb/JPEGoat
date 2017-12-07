@@ -22,7 +22,7 @@ const templatesDir = `${srcDir}/templates`;
 
 const programFiles = process.env.hasOwnProperty('ProgramFiles(x86)') ? process.env['ProgramFiles(x86)'] : process.env['ProgramFiles']
 ,	homeDir = path.join(os.homedir(), 'AppData', 'Local')
-,	companyDir = path.join(programFiles, 'Caprine Softworks')
+,	companyDir = path.join(homeDir, 'Caprine Softworks')
 ,	projectDir = path.join(companyDir, 'JPEGoat')
 ,	configDir = path.join(projectDir, 'config')
 ,	userConfigDir = path.join(configDir, machineId)
