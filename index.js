@@ -1,8 +1,10 @@
+const pkg = require('./package.json');
 const electron = require('electron'), { app, BrowserWindow, ipcMain, globalShortcut, dialog, Menu, shell } = electron;
 const os = require('os');
 const url = require('url');
 const fs = require('fs-extra');
 const path = require('path');
+const request = require('request');
 const { machineIdSync } = require('node-machine-id');
 const jimp = require('jimp');
 const ini = require('ini');
@@ -54,6 +56,7 @@ let mainWindow;			//	Main window
 const initializer = () => {
 	async.waterfall([
 		createSplash,
+		checkReleases,
 		createDirs,
 		checkConfig,
 		loadConfig,
@@ -91,6 +94,46 @@ const loadMain = (cb) => {
 	mainWindow.on('ready-to-show', () => {
 		console.log('Main window loaded!');
 		cb(null);
+	});
+};
+const checkReleases = (cb) => {
+	console.log('Checking for new version...');
+	const apiUrl = "https://api.github.com/repos/depthbomb/JPEGoat/releases/latest";
+	request({
+		headers: {
+			'User-Agent': `Baaa! JPEGoat v${pkg.version}`
+		},
+		uri: apiUrl,
+		method: 'GET'
+	}, (e, r, b) => {
+		if (e) throw new Error (e);
+		let data = JSON.parse(b);
+		console.log('Got API data...');
+		if (data.id > pkg.version) {
+			console.log('New version available', data.id);
+			dialog.showMessageBox({
+				type: 'info',
+				title: 'Update available',
+				message: 'A new version of JPEGoat is available.',
+				detail: `${pkg.version} -> ${data.tag_name}`,
+				buttons: [
+					'Go to download page',
+					'Close'
+				],
+				cancelId: 1
+			}, response => {
+				if (response === 0) {
+					shell.openExternal(data.html_url);
+					app.quit();
+					cb(null);
+				} else {
+					cb(null);
+				}
+			});
+		} else {
+			console.log('No new version available', data.id);
+			cb(null);
+		}
 	});
 };
 const createSplash = (cb) => {
@@ -239,7 +282,7 @@ ipcMain.on('choose-image', (event) => {
 							if (response === 0) return shell.openExternal(data.link);
 							event.sender.send('image-processing-complete');
 							event.sender.send('update-progress', { success: true, complete: true });
-						})
+						});
 					}).catch(e => {
 						//	Show a generic error dialog box with the error message from the Imgur API
 						dialog.showMessageBox({
