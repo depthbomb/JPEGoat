@@ -19,7 +19,7 @@ This project uses a _two-package_ scheme in which there is a package for the dev
 * `build:full` runs the image-related tasks and then the tasks for the remaining files. This is slower so I have provided a `build:quick` script that skips the image tasks to greatly speed up testing (assuming you've ran the image task prior).
 * The processed JavaScript files are heavily obfuscated due to the project initially being closed-source. I never bothered to remove the obfuscation tasks from Gulp but it shouldn't be a problem seeing as you have access to the source files here.
 * `build-info.json` is an auto-generated file that is placed in the `app` directory upon deployment. It contains some extra info about the specific build of the application including date, version, and build hash.
-* Effective 12/7/2017, this project will use a versioning scheme similar to that of *BLAG Linux and GNU* where the version number will start out at a large value, such as **1000**. Major releases will move this number to the next thousand, minor changes increment it by **1**, and patches/bugfixes increment it by **0.1**. Some examples below:
+* Effective 12/7/2017, this project will use a versioning scheme similar to that of *BLAG Linux and GNU* where the version number will start out at a large value, such as **1000**. Major releases will move this number to the next thousand, minor changes increment it by **1**, and patches/bugfixes increment it by **0.1**. Changes in a number will reset all numbers below it. Some examples below:
 	* 1057.5
 	* 1105.39
 	* 2000.12
