@@ -109,7 +109,7 @@ const checkReleases = (cb) => {
 		if (e) throw new Error (e);
 		let data = JSON.parse(b);
 		console.log('Got API data...');
-		if (data.id > pkg.version) {
+		if (data.tag_name > pkg.version) {
 			console.log('New version available', data.id);
 			dialog.showMessageBox({
 				type: 'info',
