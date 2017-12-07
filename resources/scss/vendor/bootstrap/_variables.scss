@@ -101,10 +101,10 @@ $theme-color-interval:      8% !default;
 //
 // Quickly modify global styling by enabling or disabling optional features.
 
-$enable-caret:              true !default;
+$enable-caret:              false !default;
 $enable-rounded:            true !default;
 $enable-shadows:            true !default;
-$enable-gradients:          false !default;
+$enable-gradients:          true !default;
 $enable-transitions:        true !default;
 $enable-hover-media-query:  false !default;
 $enable-grid-classes:       true !default;

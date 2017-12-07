@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const gulp = require('gulp');
+const { exec } = require('child_process');
 const intercept = require('gulp-intercept');
 const csso = require('gulp-csso');
 const base64 = require('gulp-css-base64');
@@ -105,7 +106,7 @@ const uid = (length) => {
 
 gulp.task('sass', () => {
 	return gulp.src([
-		`${resourcesDir}/scss/app.scss`
+		resourcesDir + '/scss/app.scss'
 	])
 	.pipe(replace(/\/\*![\s\S](.*)[\s\S]\*\//gi, ''))
 	.pipe(sass())
@@ -117,7 +118,7 @@ gulp.task('sass', () => {
 
 gulp.task('es6', () => {
 	return gulp.src([
-		`${resourcesDir}/js/**/**/*.js`
+		resourcesDir + '/js/**/**/*.js'
 	])
 	.pipe(replace(/\/\*![\s\S](.*)[\s\S]\*\//gi, ''))
 	.pipe(babel())
@@ -136,7 +137,7 @@ gulp.task('es6', () => {
 
 gulp.task('app', () => {
 	return gulp.src([
-		`./index.js`
+		'./index.js'
 	])
 	.pipe(replace(/\/\*![\s\S](.*)[\s\S]\*\//gi, ''))
 	.pipe(babel())
@@ -152,10 +153,18 @@ gulp.task('app', () => {
 
 });
 
-
-gulp.task('images', () => {
+gulp.task('images', ['image:icons', 'image:compress']);
+gulp.task('image:icons', (cb) => {
+	exec('electron-icon-maker --input=./resources/img/jpegoat_icon.png --output=./resources/img', (err, stdout, stderr) => {
+		console.log(stdout);
+		console.log(stderr);
+		cb(err);
+	});
+});
+gulp.task('image:compress', ['image:icons'], () => {
 	return gulp.src([
-		`${resourcesDir}/img/**/*`,
+		'!' + resourcesDir + '/img/jpegoat_icon.png',
+		resourcesDir + '/img/**/*'
 	])
 	.pipe(imagemin([
 		imagemin.gifsicle({ interlaced: true }),
@@ -170,6 +179,7 @@ gulp.task('images', () => {
 	], { verbose: true }))
 	.pipe(gulp.dest(buildDir + '/img'));
 });
+
 
 gulp.task('font', ['font:materialdesignicons', 'font:lato']);
 gulp.task('font:materialdesignicons', () => {
@@ -274,6 +284,7 @@ gulp.task('cleanup', () => {
 	});
 });
 
+
 gulp.task('cleanupThumbsDB', () => {
 	gulp.src([
 		`./app/assets/img/**/**/*.db`,
@@ -285,6 +296,7 @@ gulp.task('cleanupThumbsDB', () => {
 		});
 	}))
 });
+
 
 /**
  * Deletes existing licenses files and moves a copy of them to a dedicated directory in each build folder

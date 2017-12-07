@@ -1,0 +1,41 @@
+#dialog {
+	display: none;
+
+	position: absolute;
+	top: $titleBarHeight;
+	left: 0;
+	width: 100%;
+	height: 100%;
+
+	.dialog-backdrop {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		color: #fff;
+		background-color: rgba(0, 0, 0, 0.55);
+
+		.dialog-content {
+			position: absolute;
+			top: 0;
+			left: 0;
+			bottom: 0;
+			right: 0;
+			margin: auto;
+			width: 55%;
+			max-height: 25%;
+
+			.dialog-header {
+				text-align: center;
+				font-size: 36pt;
+			}
+
+			.dialog-progress {
+				margin-top: 15px;
+
+				.progress {
+					height: 30px;
+				}
+			}
+		}
+	}
+}

@@ -1,7 +1,5 @@
-/**
-* Rodent Core CSS
-*/
 @import 'vendor/bootstrap/bootstrap';
+@import 'vendor/bootstrap-4-switches';
 @import 'vendor/materialdesignicons/materialdesignicons';
 @import 'vendor/lato/lato';
 
@@ -9,6 +7,7 @@
 @import 'app/mixins';
 @import 'app/scaffold';
 @import 'app/winui';
+@import 'app/dialog';
 @import 'app/splashscreen';
 @import 'app/panel';
 @import 'app/sidebar';

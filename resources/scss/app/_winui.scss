@@ -4,51 +4,76 @@
 	-webkit-user-select: none;
 	-webkit-app-region: drag;
 
-	-webkit-box-direction: reverse;
-	-webkit-box-orient: horizontal;
-	-webkit-box-align: stretch;
-	-webkit-box-pack: start;
-
 	display: flex;
-	flex-direction: row-reverse;
-	flex-wrap: nowrap;
-	justify-content: flex-start;
-	align-items: stretch;
+	flex-direction: row;
+	flex-grow: 0;
+   flex-shrink: 0;
 	width: 100vw;
 	height: $titleBarHeight;
 	line-height: $titleBarHeight;
 	color: $gray-500;
 	background-color: $titleBarColor;
 
+	.resize-handle {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		-webkit-app-region: no-drag;
+
+		&.resize-handle-top {
+			width: 100%;
+			height: 3px;
+		}
+		&.resize-handle-left {
+			width: 3px;
+			height: $titleBarHeight;
+		}
+	}
+	
 	.titlebar-title {
-		padding-left: 8px;
-		width: 100vw;
+		display: inline-block;
 		height: $titleBarHeight;
 		font-size: $titleBarHeight / 2;
+		text-align: center;
+	}
+
+	.titlebar-icon {
+		margin: auto 6px auto 4px;
+		width: 18px;
+		height: 18px;
+		border-radius: 5px;
 	}
 
 	.titlebar-buttons {
-		display: flex;
-		align-items: stretch;
-		width: $titleBarHeight * 3; //	3 buttons at 30x30 each
+		margin-left: auto;
+		flex-grow: 0;
+		flex-shrink: 0;
+		max-width: ($titleBarHeight + ($titleBarHeight / 2)) * 3;	//	To allow all 3 buttons
 		height: $titleBarHeight;
 
 		> a.titlebar-button {
-			width: $titleBarHeight;
+			display: inline-block;
+			width: $titleBarHeight + ($titleBarHeight / 2);
 			height: $titleBarHeight;
 			text-align: center;
-			-webkit-transition: background-color 200ms ease-in-out;
 
-			> .icon {
-				width: ($titleBarHeight / 2);
-				height: ($titleBarHeight / 2);
-				color: $gray-500;
-				text-decoration: none;
-				-webkit-transition: color 200ms ease-in-out;
-				transition: color 200ms ease-in-out;
+			-webkit-app-region: no-drag;
+
+			-webkit-transition: background-color 200ms ease-in-out;
+			transition: background-color 200ms ease-in-out;
+
+			> svg {
+				-webkit-transition: background-color 200ms ease-in-out;
+				transition: background-color 200ms ease-in-out;
+
+				> path {
+					fill: $gray-500;
+					-webkit-transition: fill 200ms ease-in-out;
+					transition: fill 200ms ease-in-out;
+				}
 			}
 
-			&:nth-child(1) > .icon {	//	Move the minimize icon down
+			&:nth-child(1) > svg {	//	Move the minimize icon down
 				vertical-align: sub;
 			}
 
@@ -59,10 +84,10 @@
 			}
 
 			&:hover {
-				background-color: lighten($titleBarColor, 5.5%);
+				background-color: lighten($titleBarColor, 10%);
 
-				& > .icon {
-					color: #fff;
+				> svg > path {
+					fill: #fff;
 				}
 			}
 		}
@@ -70,23 +95,28 @@
 }
 
 #footer {
-	-webkit-box-direction: reverse;
-	-webkit-box-orient: horizontal;
-	-webkit-box-align: stretch;
-	-webkit-box-pack: start;
-
 	display: flex;
-	flex-direction: row-reverse;
-	flex-wrap: nowrap;
-	justify-content: flex-start;
+	flex-direction: row;
+	flex-grow: 0;
+	flex-shrink: 0;
 	align-items: stretch;
 
 	width: 100vw;
 	height: $footerHeight;
 	line-height: $footerHeight;
 
+	.footer-version {
+		margin: 0 6px;
+		max-width: 150px;
+		height: $footerHeight;
+		font-size: 13px;
+		color: $gray-700;
+		font-style: italic;
+	}
+
 	.footer-grabber {
 		display: flex;
+		margin-left: auto;
 		width: $footerHeight;
 		height: $footerHeight;
 		text-align: center;

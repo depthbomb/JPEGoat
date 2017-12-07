@@ -2,15 +2,13 @@ import { Layout } from './_Layout';
 exports.Index = {
 	oncreate: () => {
 		document.querySelector('.titlebar-title').innerHTML = 'Home';
+		ipcRenderer.on('image-processing-complete', event => document.querySelector('.input-trigger').classList.remove('disabled'));
 	},
 	view: () => {
 		return m(Layout, [
-			m('a.input-trigger[href="javascript:;"]', { onclick: () => {
-					ipcRenderer.send('choose-image', true);
-				} }, [
-					m('span.icon.icon-upload'),
-					' Choose Image'
-				])
+			m('a.input-trigger[href="javascript:;"]', { onclick: e => ipcRenderer.send('choose-image') }, [
+				m('span.icon.icon-upload'), ' Choose Image'
+			])
 		])
 	}
 }

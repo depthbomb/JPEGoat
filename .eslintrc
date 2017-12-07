@@ -5,11 +5,26 @@
 		"classes": true
 	},
 	"env": {
+		"browser": true,
 		"es6": true,
 		"node": true
 	},
+	"extends": [
+		"eslint:recommended"
+	],
+	"plugins": [
+		"import"
+	],
 	"parserOptions": {
-		"ecmaVersion": 6,
+		"ecmaVersion": 7,
+		"ecmaFeatures": {
+			"experimentalObjectRestSpread": true
+		},
 		"sourceType": "module"
+	},
+	"rules": {
+		"no-undef": 0,
+		"no-unused-vars": 0,
+		"no-console": 0
 	}
 }

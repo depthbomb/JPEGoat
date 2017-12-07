@@ -1,4 +1,4 @@
-const electron = require('electron'), { app, BrowserWindow, ipcMain, globalShortcut, dialog, Menu } = electron;
+const electron = require('electron'), { app, BrowserWindow, ipcMain, globalShortcut, dialog, Menu, shell } = electron;
 const os = require('os');
 const url = require('url');
 const fs = require('fs-extra');
@@ -12,34 +12,38 @@ const machineId = machineIdSync({ original: true }), machineHash = machineIdSync
 const crypto = require('crypto'),
 	algo = 'aes-256-ctr',
 	settingsPassword = machineHash;
+const imgur = require('imgur');
 
 const srcDir = 'file:///' + __dirname;
 const assetsDir = `${srcDir}/assets`;
 const templatesDir = `${srcDir}/templates`;
 
 const programFiles = process.env.hasOwnProperty('ProgramFiles(x86)') ? process.env['ProgramFiles(x86)'] : process.env['ProgramFiles']
-,		homeDir = path.join(os.homedir(), 'AppData', 'Local')
-,		companyDir = path.join(programFiles, 'Caprine Softworks')
-,		projectDir = path.join(companyDir, 'JPEGoat')
-,		configDir = path.join(projectDir, 'config')
-,		userConfigDir = path.join(configDir, machineId)
-,		dataDir = path.join(projectDir, 'data')
-,		tmpDir = path.join(projectDir, 'tmp')
-,		userConfigFile = path.join(userConfigDir, 'settings.ini')
-,		defaultOutput = path.join(app.getPath('pictures'), 'JPEGoat')
-,		appBlack = '#212529'
-,		defaultConfig = {
-			app: {
-				locale: 'en',
-				outputPath: defaultOutput
-			},
-			imgur: {
-				enabled: false,
-				username: null,
-				password: null,
-				client: null,
-				album: null
-			}
+,	homeDir = path.join(os.homedir(), 'AppData', 'Local')
+,	companyDir = path.join(programFiles, 'Caprine Softworks')
+,	projectDir = path.join(companyDir, 'JPEGoat')
+,	configDir = path.join(projectDir, 'config')
+,	userConfigDir = path.join(configDir, machineId)
+,	dataDir = path.join(projectDir, 'data')
+,	userDataDir = path.join(dataDir, machineId)
+,	tmpDir = path.join(projectDir, 'tmp')
+,	userConfigFile = path.join(userConfigDir, 'settings.ini')
+,	defaultOutput = path.join(app.getPath('pictures'), 'JPEGoat')
+,	appBlack = '#212529'
+,	defaultConfig = {
+		app: {
+			locale: 'en',
+			previousConversions: 10,
+			outputPath: defaultOutput,
+			useWinUi: 'no'
+		},
+		imgur: {
+			enabled: 'no',
+			username: '',
+			password: '',
+			client: '',
+			album: ''
+		}
 }
 
 let clientConfig;
@@ -95,6 +99,7 @@ const createSplash = (cb) => {
 		width: 300,
 		height: 350,
 		frame: false,
+		transparent: true,
 		minimizable: false,
 		maximizable: false,
 		show: false
@@ -115,6 +120,7 @@ const createDirs = (cb) => {
 		configDir,
 		userConfigDir,
 		dataDir,
+		userDataDir,
 		tmpDir,
 		defaultOutput
 	];
@@ -153,7 +159,7 @@ const destroySplash = (cb) => {
 	cb(null);
 };
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 
@@ -177,7 +183,7 @@ app.on('before-quit', () => {
 	//TODO: any cleaning up that needs to be done
 });
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 
@@ -185,49 +191,110 @@ app.on('before-quit', () => {
 /*
 |--------------------------------------------------------------------------
 |	Open image picker dialog
+|	TODO: cleanup
 |--------------------------------------------------------------------------
 */
-ipcMain.on('choose-image', (event, arg) => {
+ipcMain.on('choose-image', (event) => {
+	event.sender.send('update-progress', { success: true, status: 'Waiting...', progress: '1%' });
+	event.sender.send('image-processing');
 	let filters = [ { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'bmp'] } ];
-	let props = [ 'openFile' ];
-	if (arg) {
-		dialog.showOpenDialog({ filters: filters, properties: props }, (files) => {
-			if (files) {
-				event.sender.send('image-processing');
-				let image = files[0];
-				jimp.read(image, (err, img) => {
-					if (err) event.sender.send('generic-error', 'Invalid file type');
-					let newFilename = `JPEGoat_${cuid()}.jpg`;
-					img.quality(1).dither565().write(path.join(clientConfig.app.outputPath, newFilename));
-					event.sender.send('image-processing-success');
-				});
-			}
-		});
-	}
+	let properties = [ 'openFile' ];
+	dialog.showOpenDialog({ filters, properties }, (files) => {
+		if (files) {
+			event.sender.send('update-progress', { success: true, status: 'Receiving file...', progress: '25%' });
+			//	'files' is returned as an array since there is functionality
+			//	to select multiple files (though unused here) so get the first
+			//	item in the array.
+			let image = files[0];
+			jimp.read(image, (err, img) => {
+				if (err) throw new Error(err);
+				event.sender.send('update-progress', { success: true, status: 'Processing image...', progress: '75%' });
+				let newFile = path.join(clientConfig.app.outputPath, `JPEGoat_${cuid()}.jpg`);	//..Create a path to the output file
+				img.quality(1).dither565().write(newFile);
+
+				if (clientConfig.imgur.enabled === 'yes') {
+					//	If the user enables Imgur uploading
+					event.sender.send('update-progress', { success: true, status: 'Uploading to Imgur...', progress: '85%' });
+					imgur.setCredentials(
+						clientConfig.imgur.username,
+						clientConfig.imgur.password,
+						clientConfig.imgur.client
+					);
+
+					imgur.uploadFile(newFile, clientConfig.imgur.album).then(json => {
+						event.sender.send('update-progress', { success: true, status: 'Upload complete!', progress: '100%' });
+						let data = json.data;
+
+						dialog.showMessageBox({
+							type: 'info',
+							title: 'Upload successful',
+							message: 'Your image has been successfully uploaded to your Imgur album.',
+							detail: data.link,
+							buttons: [
+								'Open in browser',
+								'Close'
+							],
+							cancelId: 1
+						}, response => {
+							if (response === 0) return shell.openExternal(data.link);
+							event.sender.send('image-processing-complete');
+							event.sender.send('update-progress', { success: true, complete: true });
+						})
+					}).catch(e => {
+						//	Show a generic error dialog box with the error message from the Imgur API
+						dialog.showMessageBox({
+							type: 'error',
+							title: 'Upload error',
+							message: 'There was an error while uploading your image:\n' + e.message
+						});
+						event.sender.send('image-processing-complete');
+						event.sender.send('update-progress', { success: true, complete: true });
+					});
+				} else {
+					dialog.showMessageBox({
+						type: 'info',
+						title: 'Success',
+						message: 'Image successfully JPEG-ified!',
+						buttons: [
+							'Open location',
+							'Close'
+						],
+						cancelId: 1
+					}, response => {
+						if (response === 0) shell.showItemInFolder(newFile);
+						event.sender.send('image-processing-complete');
+						event.sender.send('update-progress', { success: true, complete: true });
+					});
+				}
+
+				mainWindow.flashFrame(true);
+				mainWindow.once('focus', () => mainWindow.flashFrame(false));
+			});
+		} else {
+			//	If the user clicks 'cancel' then the file browser button will
+			//	still be disabled, so send the renderer a message to activate it.
+			event.sender.send('image-processing-complete');
+			event.sender.send('update-progress', { success: true, complete: true });
+		}
+	});
 })
 /*
 |---------------------------------------------------------------------------
 */
 
 
+
 /*
 |--------------------------------------------------------------------------
-|	Send any data to the renderer that it cannot obtain itself, such as the
-|	config directory
+|	Sends {clientConfig} to the renderer process
 |--------------------------------------------------------------------------
 */
-ipcMain.on('request-client-data', (event, arg) => {
-	if (arg) {
-		console.log('Received client data request, sending client data to renderer');
-		event.sender.send('requested-client-data', {
-			dirs: {
-				config: userConfigDir
-			}
-		});
-	}
+ipcMain.on('request-client-config', (event) => {
+	console.log('Received client data request, sending client data to renderer');
+	event.sender.send('requested-client-config', clientConfig);
 });
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 
@@ -238,17 +305,21 @@ ipcMain.on('request-client-data', (event, arg) => {
 |--------------------------------------------------------------------------
 */
 ipcMain.on('save-settings', (event, arg) => {
-	if (typeof arg === 'object') {
-		fs.writeFile(path.join(configDir, 'client.ini'), ini.stringify(arg), 'utf-8', (err) => {
-			if (err) alert(err);
-			clientConfig = ini.parse(fs.readFileSync(path.join(configDir, 'client.ini'), 'utf-8'));
-			console.log('Reloaded client config', clientConfig);
-			event.sender.send('save-settings-success', true);
-		});
-	}
+	const section = arg.section;
+	const settings = arg.data;
+
+	let stagingConfig = clientConfig;
+	stagingConfig[section] = settings;
+
+	fs.writeFile(userConfigFile, ini.stringify(stagingConfig), 'utf8', (err) => {
+		if (err) throw new Error (err);
+		clientConfig = ini.parse(fs.readFileSync(userConfigFile, 'utf-8'));
+		
+		event.sender.send('saved-settings', { settings: clientConfig, section });	//..Let the renderer know
+	});
 });
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 
@@ -258,19 +329,11 @@ ipcMain.on('save-settings', (event, arg) => {
 |	Catch window control events from the renderer process
 |--------------------------------------------------------------------------
 */
-ipcMain.on('win.minimize', (event) => {
-	BrowserWindow.fromId(mainWindow.id).minimize();	//	Use fromId() so we can specifically target a window
-});
-ipcMain.on('win.maximize', (event) => {
-	let mw = BrowserWindow.fromId(mainWindow.id);
-	if (mw.isMaximized()) mw.unmaximize();
-	else mw.maximize();
-});
 ipcMain.on('win.close', (event) => {
 	app.quit();
 });
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 
@@ -284,7 +347,7 @@ ipcMain.on('sys.quit', (event, arg) => {
 	if (arg) app.quit();
 });
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 
@@ -299,7 +362,7 @@ ipcMain.on('log', (event, msg) => {
 	console.log('[Renderer]', msg);
 });
 /*
-|---------------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 

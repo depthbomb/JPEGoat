@@ -2,9 +2,9 @@
 release-builds
 package-lock.json
 node_modules
+resources/img/icons
 app/node_modules
 app/assets
-app/i18n
 app/templates
 app/build-info.json
 app/index.js
