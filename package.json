@@ -26,8 +26,7 @@
 		"pack:mac": "electron-packager ./app JPEGoat --overwrite --platform=darwin --arch=x64 --prune=true --out=./release-builds --electron-version=1.7.9 --executable-name=JPEGoat --icon=./app/assets/img/icons/darwin/icon.icns",
 		"pack:win": "electron-packager ./app JPEGoat --overwrite --asar --platform=win32 --arch=ia32 --prune=true --out=./release-builds --version-string.CompanyName=\"Caprine Softworks\" --version-string.FileDescription=\"Needs more JPEG. A desktop application to horribly compress your images.\" --version-string.ProductName=\"JPEGoat\" --electron-version=1.7.9 --executable-name=JPEGoat --icon=./app/assets/img/icons/win32/icon.ico",
 		"pack:linux": "electron-packager ./app JPEGoat --overwrite --asar --platform=linux --arch=x64 --prune=true --out=./release-builds --electron-version=1.7.9 --executable-name=JPEGoat --icon=./app/assets/img/icons/png/1024x1024.png",
-		"pack:all": "npm run pack:mac && npm run pack:win && npm run pack:linux && pack:post",
-		"pack:post": "gulp post-build"
+		"pack:all": "npm run pack:mac && npm run pack:win && npm run pack:linux"
 	},
 	"devDependencies": {
 		"atob": "^2.0.3",

@@ -298,36 +298,6 @@ gulp.task('cleanupThumbsDB', () => {
 });
 
 
-/**
- * Deletes existing licenses files and moves a copy of them to a dedicated directory in each build folder
- */
-gulp.task('post-build', () => {
-	let releaseBuilds = './release-builds';
-	let postBuild = './post-build';
-	fs.readdir(releaseBuilds, (err, files) => {
-		if (err) throw err;
-		files.forEach((file) => {
-			let buildPath = path.join(releaseBuilds, file);
-			let licensePath = path.join(buildPath, 'licenses');
-			fs.unlink(path.join(buildPath, 'LICENSE'), (err) => { if (err && err.code != 'ENOENT') throw err });
-			fs.unlink(path.join(buildPath, 'LICENSES.chromium.html'), (err) => { if (err && err.code != 'ENOENT') throw err });
-			fs.mkdir(path.join(buildPath, 'licenses'), (err) => {
-				if (err && err.code != 'EEXIST') throw err;
-				fs.readdir(path.join(postBuild, 'licenses'), (err, files) => {
-					if (err) throw err;
-					files.forEach(file => {
-						fs.copyFile(path.join(postBuild, 'licenses', file), path.join(licensePath), (err) => {
-							if (err) throw err;
-							util.log('Copied file to build:', file);
-						})
-					});
-				});
-			});
-		})
-	});
-});
-
-
 gulp.task('processTemplates', ['minifyTemplates'], () => {
 	gulp.start('convertImages');
 });

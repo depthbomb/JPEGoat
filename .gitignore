@@ -1,5 +1,6 @@
 !.gitignore
 release-builds
+post-build
 package-lock.json
 node_modules
 resources/img/icons
