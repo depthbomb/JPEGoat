@@ -15,19 +15,20 @@ const crypto = require('crypto'),
 	algo = 'aes-256-ctr',
 	settingsPassword = machineHash;
 const imgur = require('imgur');
+const moment = require('moment');
 
 const srcDir = 'file:///' + __dirname;
 const assetsDir = `${srcDir}/assets`;
 const templatesDir = `${srcDir}/templates`;
 
-const programFiles = process.env.hasOwnProperty('ProgramFiles(x86)') ? process.env['ProgramFiles(x86)'] : process.env['ProgramFiles']
-,	homeDir = path.join(os.homedir(), 'AppData', 'Local')
+const homeDir = path.join(os.homedir(), 'AppData', 'Local')
 ,	companyDir = path.join(homeDir, 'Caprine Softworks')
 ,	projectDir = path.join(companyDir, 'JPEGoat')
 ,	configDir = path.join(projectDir, 'config')
 ,	userConfigDir = path.join(configDir, machineId)
 ,	dataDir = path.join(projectDir, 'data')
 ,	userDataDir = path.join(dataDir, machineId)
+,	logsDir = path.join(projectDir, 'logs')
 ,	tmpDir = path.join(projectDir, 'tmp')
 ,	userConfigFile = path.join(userConfigDir, 'settings.ini')
 ,	defaultOutput = path.join(app.getPath('pictures'), 'JPEGoat')
@@ -37,7 +38,8 @@ const programFiles = process.env.hasOwnProperty('ProgramFiles(x86)') ? process.e
 			locale: 'en',
 			previousConversions: 10,
 			outputPath: defaultOutput,
-			useWinUi: 'no'
+			useWinUi: 'no',
+			disableUpdateDialog: 'no'
 		},
 		imgur: {
 			enabled: 'no',
@@ -56,10 +58,10 @@ let mainWindow;			//	Main window
 const initializer = () => {
 	async.waterfall([
 		createSplash,
-		checkReleases,
 		createDirs,
 		checkConfig,
 		loadConfig,
+		checkReleases,
 		loadMain,
 		destroySplash
 	], (err) => {
@@ -111,27 +113,32 @@ const checkReleases = (cb) => {
 		console.log('Got API data...');
 		if (data.tag_name > pkg.version) {
 			console.log('New version available', data.id);
-			dialog.showMessageBox({
-				type: 'info',
-				title: 'Update available',
-				message: 'A new version of JPEGoat is available.',
-				detail: `${pkg.version} -> ${data.tag_name}`,
-				buttons: [
-					'Go to download page',
-					'Close'
-				],
-				cancelId: 1
-			}, response => {
-				if (response === 0) {
-					shell.openExternal(data.html_url);
-					app.quit();
-					cb(null);
-				} else {
-					cb(null);
-				}
-			});
+			if (clientConfig.app.disableUpdateDialog === 'yes') {
+				dialog.showMessageBox({
+					type: 'info',
+					title: 'Update available',
+					message: 'A new version of JPEGoat is available.',
+					detail: `${pkg.version} -> ${data.tag_name}`,
+					buttons: [
+						'Go to download page',
+						'Close'
+					],
+					cancelId: 1
+				}, response => {
+					if (response === 0) {
+						shell.openExternal(data.html_url);
+						app.quit();
+						cb(null);
+					} else {
+						cb(null);
+					}
+				});
+			} else {
+				console.log('Not showing update dialog because user has it disabled');
+				cb(null);
+			}
 		} else {
-			console.log('No new version available', data.id);
+			console.log('No new version available');
 			cb(null);
 		}
 	});
@@ -164,6 +171,7 @@ const createDirs = (cb) => {
 		userConfigDir,
 		dataDir,
 		userDataDir,
+		logsDir,
 		tmpDir,
 		defaultOutput
 	];
@@ -182,13 +190,35 @@ const checkConfig = (cb) => {
 	console.log('Starting config creator...');
 	let configFile = userConfigFile;
 	if (fs.existsSync(configFile)) {
-		console.log('Config file is present');
+		console.log('Config file is present, checking for missing keys...');
+
+		let defaultStructure = defaultConfig;
+		let userConfig = ini.parse(fs.readFileSync(userConfigFile, 'utf-8'));
+
+		let appConfig = defaultStructure.app;
+		let imgurConfig = defaultStructure.imgur;
+
+		Object.keys(appConfig).forEach(key => {
+			if (!userConfig.app.hasOwnProperty(key)) {
+				console.log('User config does not have a value for', key)
+				userConfig.app[key] = appConfig[key];
+			}
+		});
+
+		Object.keys(imgurConfig).forEach(key => {
+			if (!userConfig.imgur.hasOwnProperty(key)) {
+				console.log('User config does not have a value for', key)
+				userConfig.imgur[key] = imgurConfig[key];
+			}
+		});
+
+		fs.writeFileSync(configFile, ini.stringify(userConfig));
+		cb(null);
 	} else {
 		console.log('Wrote default config');
 		fs.writeFileSync(configFile, ini.stringify(defaultConfig));
+		cb(null);
 	}
-
-	cb(null);
 };
 const loadConfig = (cb) => {
 	console.log('Loading client config...');
@@ -234,7 +264,6 @@ app.on('before-quit', () => {
 /*
 |--------------------------------------------------------------------------
 |	Open image picker dialog
-|	TODO: cleanup
 |--------------------------------------------------------------------------
 */
 ipcMain.on('choose-image', (event) => {
@@ -279,7 +308,7 @@ ipcMain.on('choose-image', (event) => {
 							],
 							cancelId: 1
 						}, response => {
-							if (response === 0) return shell.openExternal(data.link);
+							if (response === 0) shell.openExternal(data.link);
 							event.sender.send('image-processing-complete');
 							event.sender.send('update-progress', { success: true, complete: true });
 						});
@@ -409,18 +438,36 @@ ipcMain.on('log', (event, msg) => {
 */
 
 
-
-const appCrypt = {
-	en: (data, algo, pass, cb) => {
-		let cipher = crypto.createCipher(algo, pass);
-		let encrypted = cipher.update(data, 'utf8', 'base64');
-		encrypted += cipher.final('base64');
-		return cb(encrypted);
-	},
-	de: (data, algo, pass, cb) => {
-		let decipher = crypto.createDecipher(algo, pass);
-		let decrypted = decipher.update(data, 'base64', 'utf8');
-		decrypted += decipher.final('utf8');
-		return cb(decrypted);
-	}
-};
+/*
+|--------------------------------------------------------------------------
+|	Handle any uncaught exceptions in a graceful manner
+|--------------------------------------------------------------------------
+*/
+process.on("uncaughtException", (err) => {
+	const errorMsg = err.stack.replace(new RegExp(`${__dirname}/`, "g"), "./");
+	const logFile = path.join(logsDir, `error-${moment().format('MM-DD-YYYY-WW')}.log`);
+	fs.writeFile(logFile, errorMsg, (err) => {
+		if (err) console.log(err);
+		dialog.showMessageBox({
+			type: 'error',
+			title: 'Uncaught Exception',
+			message: 'The application has ran into a problem that is preventing it from functioning correctly.',
+			detail: `A log containing useful info has been saved to ${logsDir}`,
+			buttons: [
+				'Submit issue',
+				'Open log location',
+				'Close'
+			],
+			cancelId: 2
+		}, (res) => {
+			if (res === 0) shell.openExternal('https://github.com/depthbomb/JPEGoat/issues');
+			else if (res === 1) shell.showItemInFolder(logFile);
+			//	We want to quit no matter what because we don't know if this exception 
+			//	will cause problems in other places in the app.
+			app.quit();
+		});
+	});
+});
+/*
+|--------------------------------------------------------------------------
+*/

@@ -13,17 +13,20 @@ saveImgurSettings = () => {
 exports.ImgurSettings = {
 	oncreate: () => {
 		document.querySelector('.titlebar-title').innerHTML = 'Imgur Settings';
+		clientConfig.imgur.enabled === 'yes'
+			? document.getElementById('enabled').checked = true
+			: document.getElementById('enabled').checked = false;
 	},
 	view: () => {
 		return m(Layout, [
 			m("h2.text-light.mb-3", "Imgur Upload"),
-			m(".form-group.text-light",
+			m(".form-group.text-light", [
 				m("span.switch.switch-sm", [
-					m(`input.switch[id='enabled'][type='checkbox']${clientConfig.imgur.enabled === 'yes' ? '[checked]' : ''}`),
-					m("label[for='enabled']", "Enabled"),
-					m('p', ['This feature will automatically upload your images to an Imgur album once processed. You must have an application associated with your Imgur account. You can create an application ', m('a[href="javascript:;"]', { onclick: e => remote.shell.openExternal('https://imgur.com/account/settings/apps') }, 'here.') ])
-				])
-			),
+					m("input.switch[id='enabled'][type='checkbox']"),
+					m("label[for='enabled']", "Enabled")
+				]),
+				m('p', ['This feature will automatically upload your images to an Imgur album once processed. You must have an application associated with your Imgur account. You can create an application ', m('a[href="javascript:;"]', { onclick: e => remote.shell.openExternal('https://imgur.com/account/settings/apps') }, 'here.')])
+			]),
 			m(".form-group.text-light", [
 				m("label", "Username"),
 				m(`input.form-control[type="text"][id='username'][value='${clientConfig.imgur.username}']`)
