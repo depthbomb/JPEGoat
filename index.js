@@ -1,5 +1,5 @@
 const pkg = require('./package.json');
-const electron = require('electron'), { app, BrowserWindow, ipcMain, globalShortcut, dialog, Menu, shell } = electron;
+const electron = require('electron'), { app, BrowserWindow, ipcMain, globalShortcut, dialog, Menu, shell, clipboard } = electron;
 const os = require('os');
 const url = require('url');
 const fs = require('fs-extra');
@@ -304,11 +304,13 @@ ipcMain.on('choose-image', (event) => {
 							detail: data.link,
 							buttons: [
 								'Open in browser',
+								'Copy URL',
 								'Close'
 							],
-							cancelId: 1
+							cancelId: 2
 						}, response => {
 							if (response === 0) shell.openExternal(data.link);
+							if (response === 1) clipboard.writeText(data.link);
 							event.sender.send('image-processing-complete');
 							event.sender.send('update-progress', { success: true, complete: true });
 						});
