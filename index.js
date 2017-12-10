@@ -2,7 +2,7 @@ const pkg = require('./package.json');
 const electron = require('electron'), { app, BrowserWindow, ipcMain, globalShortcut, dialog, Menu, shell, clipboard } = electron;
 const os = require('os');
 const url = require('url');
-const fs = require('fs-extra');
+const fs = require('fs');
 const path = require('path');
 const request = require('request');
 const { machineIdSync } = require('node-machine-id');
@@ -20,6 +20,8 @@ const moment = require('moment');
 const srcDir = 'file:///' + __dirname;
 const assetsDir = `${srcDir}/assets`;
 const templatesDir = `${srcDir}/templates`;
+
+app.setAppUserModelId('CaprineSoftworks.Jpegoat');
 
 const homeDir = path.join(os.homedir(), 'AppData', 'Local')
 ,	companyDir = path.join(homeDir, 'Caprine Softworks')
@@ -360,6 +362,31 @@ ipcMain.on('choose-image', (event) => {
 })
 /*
 |---------------------------------------------------------------------------
+*/
+
+
+
+/*
+|--------------------------------------------------------------------------
+|	Receives request to check for new version of app and sends response back
+|--------------------------------------------------------------------------
+*/
+ipcMain.on('check-version', (event) => {
+	const apiUrl = "https://api.github.com/repos/depthbomb/JPEGoat/releases/latest";
+	request({
+		headers: {
+			'User-Agent': `Baaa! JPEGoat v${pkg.version}`
+		},
+		uri: apiUrl,
+		method: 'GET'
+	}, (err, res, body) => {
+		if (err) throw new Error(err);
+		let data = JSON.parse(body);
+		event.sender.send('checked-version', (data.tag_name > pkg.version));
+	});
+});
+/*
+|--------------------------------------------------------------------------
 */
 
 

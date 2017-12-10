@@ -2,7 +2,7 @@ import { Layout } from './_Layout';
 exports.Index = {
 	oncreate: () => {
 		document.querySelector('.titlebar-title').innerHTML = 'Home';
-		ipcRenderer.on('image-processing-complete', event => document.querySelector('.input-trigger').classList.remove('disabled'));
+		ipcRenderer.on('image-processing-complete', e => document.querySelector('.input-trigger').classList.remove('disabled'));
 	},
 	view: () => {
 		return m(Layout, [

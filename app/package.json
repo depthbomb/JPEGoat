@@ -19,17 +19,14 @@
 	"license": "UNLICENSED",
 	"dependencies": {
 		"async": "^2.6.0",
-		"atob": "^2.0.3",
 		"cuid": "^1.3.8",
-		"fs-extra": "^4.0.3",
 		"imgur": "^0.2.1",
 		"ini": "^1.3.5",
 		"jimp": "^0.2.28",
 		"mithril": "^1.1.6",
 		"moment": "^2.19.3",
 		"node-machine-id": "^1.1.9",
-		"request": "^2.83.0",
-		"tripcode": "^1.3.4"
+		"request": "^2.83.0"
 	},
 	"bugs": {
 		"url": "https://github.com/depthbomb/JPEGoat/issues"

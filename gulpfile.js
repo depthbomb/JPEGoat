@@ -111,7 +111,6 @@ gulp.task('sass', () => {
 	.pipe(replace(/\/\*![\s\S](.*)[\s\S]\*\//gi, ''))
 	.pipe(sass())
 	.pipe(csso())
-	.pipe(header(assetHeader))
 	.pipe(gulp.dest(buildDir + '/css'));
 });
 

@@ -1,27 +1,26 @@
 const path = require('path');
 const electron = require('electron');
 const { ipcRenderer, remote } = electron;
-const { app, dialog } = electron.remote;
+const { app, dialog, shell } = electron.remote;
 const m = require('mithril');
 
-const basePath = path.join('file:///', __dirname, '../');
+const basePath = path.join(__dirname, '../');
 const build = require('../build-info.json');
 
 let clientConfig;
 let settingsNavOpen = false;
 
-
 import { Index } from '../assets/js/components/views/Index.js';
+import { About } from '../assets/js/components/views/About.js';
 import { AppSettings } from '../assets/js/components/views/settings/_App.js';
 import { ImgurSettings } from '../assets/js/components/views/settings/_Imgur.js';
-
 
 m.route(document.body, '/', {
 	'/': Index,
 	'/settings/app': AppSettings,
-	'/settings/imgur': ImgurSettings
+	'/settings/imgur': ImgurSettings,
+	'/about': About
 });
-
 
 /*
 |--------------------------------------------------------------------------
