@@ -269,97 +269,119 @@ app.on('before-quit', () => {
 |	Open image picker dialog
 |--------------------------------------------------------------------------
 */
-ipcMain.on('choose-image', (event) => {
-	event.sender.send('update-progress', { success: true, status: 'Waiting...', progress: '1%' });
-	event.sender.send('image-processing');
-	let filters = [ { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'bmp'] } ];
-	let properties = [ 'openFile' ];
-	dialog.showOpenDialog({ filters, properties }, (files) => {
-		if (files) {
-			event.sender.send('update-progress', { success: true, status: 'Receiving file...', progress: '25%' });
-			//	'files' is returned as an array since there is functionality
-			//	to select multiple files (though unused here) so get the first
-			//	item in the array.
-			let image = files[0];
-			jimp.read(image, (err, img) => {
-				if (err) throw new Error(err);
-				event.sender.send('update-progress', { success: true, status: 'Processing image...', progress: '75%' });
-				let newFile = path.join(clientConfig.app.outputPath, `JPEGoat_${cuid()}.jpg`);	//..Create a path to the output file
-				img.quality(1).dither565().write(newFile);
+ipcMain.on('choose-image', (event, data) => {
+	const processImage = (image) => {
+		jimp.read(image, (err, img) => {
+			if (err) throw new Error(err);
+			event.sender.send('update-progress', { success: true, status: 'Processing image...', progress: '75%' });
+			let newFile = path.join(clientConfig.app.outputPath, `JPEGoat_${cuid()}.jpg`);	//..Create a path to the output file
+			img.quality(1).dither565().write(newFile);
 
-				if (clientConfig.imgur.enabled === 'yes') {
-					//	If the user enables Imgur uploading
-					event.sender.send('update-progress', { success: true, status: 'Uploading to Imgur...', progress: '85%' });
-					imgur.setCredentials(
-						clientConfig.imgur.username,
-						clientConfig.imgur.password,
-						clientConfig.imgur.client
-					);
+			if (clientConfig.imgur.enabled === 'yes') {
+				//	If the user enables Imgur uploading
+				event.sender.send('update-progress', { success: true, status: 'Uploading to Imgur...', progress: '85%' });
+				imgur.setCredentials(
+					clientConfig.imgur.username,
+					clientConfig.imgur.password,
+					clientConfig.imgur.client
+				);
 
-					imgur.uploadFile(newFile, clientConfig.imgur.album).then(json => {
-						event.sender.send('update-progress', { success: true, status: 'Upload complete!', progress: '100%' });
-						let data = json.data;
+				imgur.uploadFile(newFile, clientConfig.imgur.album).then(json => {
+					event.sender.send('update-progress', { success: true, status: 'Upload complete!', progress: '100%' });
+					let data = json.data;
 
-						if (clientConfig.imgur.deleteAfterUpload === 'yes') fs.unlink(newFile);
+					if (clientConfig.imgur.deleteAfterUpload === 'yes') fs.unlink(newFile);
 
-						dialog.showMessageBox({
-							type: 'info',
-							title: 'Upload successful',
-							message: 'Your image has been successfully uploaded to your Imgur album.',
-							detail: data.link,
-							buttons: [
-								'Open in browser',
-								'Copy URL',
-								'Close'
-							],
-							cancelId: 2
-						}, response => {
-							if (response === 0) shell.openExternal(data.link);
-							if (response === 1) clipboard.writeText(data.link);
-							event.sender.send('image-processing-complete');
-							event.sender.send('update-progress', { success: true, complete: true });
-
-							mainWindow.flashFrame(true);
-							mainWindow.once('focus', () => mainWindow.flashFrame(false));
-						});
-					}).catch(e => {
-						//	Show a generic error dialog box with the error message from the Imgur API
-						dialog.showMessageBox({
-							type: 'error',
-							title: 'Upload error',
-							message: 'There was an error while uploading your image:\n' + e.message
-						});
-						event.sender.send('image-processing-complete');
-						event.sender.send('update-progress', { success: true, complete: true });
-					});
-				} else {
 					dialog.showMessageBox({
 						type: 'info',
-						title: 'Success',
-						message: 'Image successfully JPEG-ified!',
+						title: 'Upload successful',
+						message: 'Your image has been successfully uploaded to your Imgur album.',
+						detail: data.link,
 						buttons: [
-							'Open location',
+							'Open in browser',
+							'Copy URL',
 							'Close'
 						],
-						cancelId: 1
+						cancelId: 2
 					}, response => {
-						if (response === 0) shell.showItemInFolder(newFile);
+						if (response === 0) shell.openExternal(data.link);
+						if (response === 1) clipboard.writeText(data.link);
 						event.sender.send('image-processing-complete');
 						event.sender.send('update-progress', { success: true, complete: true });
 
 						mainWindow.flashFrame(true);
 						mainWindow.once('focus', () => mainWindow.flashFrame(false));
 					});
-				}
+				}).catch(e => {
+					//	Show a generic error dialog box with the error message from the Imgur API
+					dialog.showMessageBox({
+						type: 'error',
+						title: 'Upload error',
+						message: 'There was an error while uploading your image:\n' + e.message
+					});
+					event.sender.send('image-processing-complete');
+					event.sender.send('update-progress', { success: true, complete: true });
+				});
+			} else {
+				dialog.showMessageBox({
+					type: 'info',
+					title: 'Success',
+					message: 'Image successfully JPEG-ified!',
+					buttons: [
+						'Open location',
+						'Close'
+					],
+					cancelId: 1
+				}, response => {
+					if (response === 0) shell.showItemInFolder(newFile);
+					event.sender.send('image-processing-complete');
+					event.sender.send('update-progress', { success: true, complete: true });
+
+					mainWindow.flashFrame(true);
+					mainWindow.once('focus', () => mainWindow.flashFrame(false));
+				});
+			}
+		});
+	};
+
+	event.sender.send('update-progress', { success: true, status: 'Waiting...', progress: '1%' });
+	event.sender.send('image-processing');
+	if (data.type === 'file') {
+		let filters = [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'bmp'] }];
+		let properties = ['openFile'];
+		dialog.showOpenDialog({ filters, properties }, (files) => {
+			if (files) {
+				event.sender.send('update-progress', { success: true, status: 'Receiving file...', progress: '25%' });
+				//	'files' is returned as an array since there is functionality
+				//	to select multiple files (though unused here) so get the first
+				//	item in the array.
+				let image = files[0];
+				processImage(image);
+			} else {
+				//	If the user clicks 'cancel' then the file browser button will
+				//	still be disabled, so send the renderer a message to activate it.
+				event.sender.send('image-processing-complete');
+				event.sender.send('update-progress', { success: true, complete: true });
+			}
+		});
+	} else if (data.type === 'url') {
+		let checkRegex = /^https?:\/\/(?:[a-z0-9\-]+\.)+[a-z]{2,6}(?:\/[^\/#?]+)+\.(?:jpg|gif|png|jpeg).*?$/i;
+		if (!checkRegex.test(data.content)) {
+			dialog.showMessageBox({
+				type: 'error',
+				title: 'Error',
+				message: 'The URL you entered appears to be invalid.'
+			}, res => {
+				event.sender.send('image-processing-complete');
+				event.sender.send('update-progress', { success: true, complete: true });
 			});
 		} else {
-			//	If the user clicks 'cancel' then the file browser button will
-			//	still be disabled, so send the renderer a message to activate it.
-			event.sender.send('image-processing-complete');
-			event.sender.send('update-progress', { success: true, complete: true });
+			processImage(data.content);
 		}
-	});
-})
+	} else {
+		// ???
+	}
+});
 /*
 |---------------------------------------------------------------------------
 */
@@ -494,7 +516,8 @@ ipcMain.on('log', (event, msg) => {
 */
 process.on("uncaughtException", (err) => {
 	const errorMsg = err.stack.replace(new RegExp(`${__dirname}/`, "g"), "./");
-	const logFile = path.join(logsDir, `error-${moment().format('MM-DD-YYYY-WW')}.log`);
+	const logFile = path.join(logsDir, `error-${moment().format('X-MM-DD-YYYY')}.log`);
+	console.log(errorMsg);
 	fs.writeFile(logFile, errorMsg, (err) => {
 		if (err) console.log(err);
 		dialog.showMessageBox({
