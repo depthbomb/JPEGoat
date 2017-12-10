@@ -27,7 +27,7 @@ exports.Sidebar = {
 						m("li", m("a[href='/settings/app']", { oncreate: m.route.link }, "App")),
 						m("li", m("a[href='/settings/imgur']", { oncreate: m.route.link }, "Imgur"))
 					]),
-					m("li", m("a[href='/about']", { oncreate: m.route.link }, [ m('span.icon.icon-information-circle-variant'), " About" ]))
+					m("li", m("a[href='/about']", { oncreate: m.route.link }, [ m('span.icon.icon-information-outline'), " About" ]))
 				])
 			])
 		])
