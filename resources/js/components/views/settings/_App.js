@@ -35,7 +35,7 @@ exports.AppSettings = {
 			m(".form-group", [
 				m("span.switch.switch-sm", [
 					m("input.switch#show-update-dialog[type='checkbox']"),
-					m("label[for='show-update-dialog']", "Show update dialog on app boot")
+					m("label[for='show-update-dialog']", "Disable update dialog on app boot")
 				]),
 				m('small.form-text', 'Disabling this will prevent the update dialog from appearing on boot when there is a new app version available. You will still be able to see if there is a new version of the app available in the app\'s About page.')
 			]),
