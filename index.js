@@ -43,6 +43,7 @@ const homeDir = path.join(os.homedir(), 'AppData', 'Local')
 		},
 		imgur: {
 			enabled: 'no',
+			deleteAfterUpload: 'no',
 			username: '',
 			password: '',
 			client: '',
@@ -297,6 +298,8 @@ ipcMain.on('choose-image', (event) => {
 						event.sender.send('update-progress', { success: true, status: 'Upload complete!', progress: '100%' });
 						let data = json.data;
 
+						if (clientConfig.imgur.deleteAfterUpload === 'yes') fs.unlink(newFile);
+
 						dialog.showMessageBox({
 							type: 'info',
 							title: 'Upload successful',
@@ -313,6 +316,9 @@ ipcMain.on('choose-image', (event) => {
 							if (response === 1) clipboard.writeText(data.link);
 							event.sender.send('image-processing-complete');
 							event.sender.send('update-progress', { success: true, complete: true });
+
+							mainWindow.flashFrame(true);
+							mainWindow.once('focus', () => mainWindow.flashFrame(false));
 						});
 					}).catch(e => {
 						//	Show a generic error dialog box with the error message from the Imgur API
@@ -338,11 +344,11 @@ ipcMain.on('choose-image', (event) => {
 						if (response === 0) shell.showItemInFolder(newFile);
 						event.sender.send('image-processing-complete');
 						event.sender.send('update-progress', { success: true, complete: true });
+
+						mainWindow.flashFrame(true);
+						mainWindow.once('focus', () => mainWindow.flashFrame(false));
 					});
 				}
-
-				mainWindow.flashFrame(true);
-				mainWindow.once('focus', () => mainWindow.flashFrame(false));
 			});
 		} else {
 			//	If the user clicks 'cancel' then the file browser button will
@@ -354,6 +360,20 @@ ipcMain.on('choose-image', (event) => {
 })
 /*
 |---------------------------------------------------------------------------
+*/
+
+
+
+/*
+|--------------------------------------------------------------------------
+|	Opens the user config in their own editor
+|--------------------------------------------------------------------------
+*/
+ipcMain.on('open-config-file', (event) => {
+	shell.openItem(userConfigFile);
+});
+/*
+|--------------------------------------------------------------------------
 */
 
 

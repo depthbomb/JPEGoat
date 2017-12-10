@@ -15,7 +15,7 @@ exports.Sidebar = {
 		else document.getElementById('settings').classList.remove('open');
 	},
 	view: () => {
-		return m("nav[id='sidebar']", [
+		return m("nav#sidebar", [
 			m(".sidebar-header",
 				m("h3", "JPEGoat")
 			),
