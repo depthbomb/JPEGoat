@@ -6,7 +6,7 @@ exports.Index = {
 	},
 	view: () => {
 		return m(Layout, [
-			m('a.input-trigger[href="javascript:;"]', { onclick: e => ipcRenderer.send('choose-image', { t: 'file', c: null }) }, [
+			m('a.btn.btn-primary.btn-hg.btn-block[href="javascript:;"]', { onclick: e => ipcRenderer.send('choose-image', { t: 'file', c: null }) }, [
 				m('span.icon.icon-upload'), ' Choose Image'
 			]),
 			m('.form-group.mt-3', [
