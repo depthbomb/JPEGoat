@@ -7,7 +7,7 @@ const m = require('mithril');
 const basePath = path.join(__dirname, '../');
 const build = require('../build-info.json');
 
-let clientConfig;
+let clientConfig = remote.getGlobal('clientConfig');
 let settingsNavOpen = false;
 
 import { Index } from '../assets/js/components/views/Index.js';
@@ -27,11 +27,6 @@ m.route(document.body, '/', {
 |	Request and receive client config
 |--------------------------------------------------------------------------
 */
-ipcRenderer.send('request-client-config');
-ipcRenderer.on('requested-client-config', (event, data) => {
-	if (typeof data !== 'object') alert('There was a problem processing your client settings. Please see %LINK HERE% for steps on troublehsooting this problem.');
-	clientConfig = data;
-});
 ipcRenderer.on('saved-settings', (event, data) => {
 	//	Set {clientConfig} to the new data
 	clientConfig = data.settings;

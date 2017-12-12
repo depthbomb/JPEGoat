@@ -41,7 +41,8 @@ const homeDir = path.join(os.homedir(), 'AppData', 'Local')
 			previousConversions: 10,
 			outputPath: defaultOutput,
 			useWinUi: 'no',
-			disableUpdateDialog: 'no'
+			disableUpdateDialog: 'no',
+			disableGoogleAnalytics: 'no'
 		},
 		imgur: {
 			enabled: 'no',
@@ -53,7 +54,7 @@ const homeDir = path.join(os.homedir(), 'AppData', 'Local')
 		}
 }
 
-let clientConfig;
+global.clientConfig;
 
 let splashScreen;			//	Splash screen
 let mainWindow;			//	Main window
@@ -225,7 +226,7 @@ const checkConfig = (cb) => {
 };
 const loadConfig = (cb) => {
 	console.log('Loading client config...');
-	clientConfig = ini.parse(fs.readFileSync(userConfigFile, 'utf-8'));
+	global.clientConfig = ini.parse(fs.readFileSync(userConfigFile, 'utf-8'));
 	cb(null);
 };
 const destroySplash = (cb) => {
@@ -429,21 +430,6 @@ ipcMain.on('open-config-file', (event) => {
 
 /*
 |--------------------------------------------------------------------------
-|	Sends {clientConfig} to the renderer process
-|--------------------------------------------------------------------------
-*/
-ipcMain.on('request-client-config', (event) => {
-	console.log('Received client data request, sending client data to renderer');
-	event.sender.send('requested-client-config', clientConfig);
-});
-/*
-|--------------------------------------------------------------------------
-*/
-
-
-
-/*
-|--------------------------------------------------------------------------
 |	Save config settings
 |--------------------------------------------------------------------------
 */
@@ -456,7 +442,7 @@ ipcMain.on('save-settings', (event, arg) => {
 
 	fs.writeFile(userConfigFile, ini.stringify(stagingConfig), 'utf8', (err) => {
 		if (err) throw new Error (err);
-		clientConfig = ini.parse(fs.readFileSync(userConfigFile, 'utf-8'));
+		global.clientConfig = ini.parse(fs.readFileSync(userConfigFile, 'utf-8'));
 		
 		event.sender.send('saved-settings', { settings: clientConfig, section });	//..Let the renderer know
 	});

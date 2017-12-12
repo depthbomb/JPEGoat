@@ -22,7 +22,7 @@ exports.About = {
 	},
 	view: () => {
 		return m(Layout, [
-			m('h1.text-light', m(`img#logo.rounded-circle[src="${path.join(basePath, 'assets/img/icons/png/48x48.png')}"][style="vertical-align:top;"]`, { onclick: e => document.getElementById('logo').classList.toggle('spin') }), ' JPEGoat v' + build.version),
+			m('h1.text-light', m(`img#logo.rounded-circle[src="${path.join(basePath, 'assets/img/icons/png/48x48.png')}"][style="vertical-align:top;"]`, { onclick: e => document.getElementById('logo').classList.add('spin') }), ' JPEGoat v' + build.version),
 			m('small#version-check.text-muted', 'Checking for new version...'),
 			m('hr.my-4'),
 			m('p.m-0', 'Author:', m('a[href="javascript:;"]', { onclick: e => shell.openExternal('https://github.com/depthbomb') }, ' https://github.com/depthbomb')),

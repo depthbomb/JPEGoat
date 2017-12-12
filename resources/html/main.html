@@ -9,5 +9,19 @@
 	<body>
 		Loading&hellip;
 		<script src="../assets/js/app.js"></script>
+		<script>
+			if (!clientConfig.app.disableGoogleAnalytics) {
+				!function(j,p,e,g,o,a,t){j.GoogleAnalyticsObject=e;j[e]||(j[e]=function(){
+				(j[e].q=j[e].q||[]).push(arguments)});j[e].l=+new Date;a=p.createElement(g);
+				t=p.getElementsByTagName(g)[0];a.src=o;t.parentNode.insertBefore(a,t)}
+				(window,document,'baa','script','//www.google-analytics.com/analytics.js');
+				
+				baa('create', 'UA-42342529-15', 'auto');
+				baa('send', 'pageview');
+				setInterval(() => {
+					baa('send', 'event', 'heartbeat');
+				}, 300000);
+			}
+		</script>
 	</body>
 </html>
