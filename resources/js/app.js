@@ -5,10 +5,9 @@ const { app, dialog, shell } = electron.remote;
 const m = require('mithril');
 
 const basePath = path.join(__dirname, '../');
-const build = require('../build-info.json');
+const build = remote.getGlobal('buildInfo');
 
 let clientConfig = remote.getGlobal('clientConfig');
-let settingsNavOpen = false;
 
 import { Index } from '../assets/js/components/views/Index.js';
 import { About } from '../assets/js/components/views/About.js';
@@ -32,7 +31,7 @@ ipcRenderer.on('saved-settings', (event, data) => {
 	clientConfig = data.settings;
 	
 	//	Change the route to the route we were just on so the new values will appear
-	m.route.set('/settings/' + data.section, {success: true});
+	m.route.set('/settings/' + data.section, { success: true });
 });
 /*
 |--------------------------------------------------------------------------

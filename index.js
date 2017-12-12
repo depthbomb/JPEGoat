@@ -1,5 +1,5 @@
 const pkg = require('./package.json');
-const electron = require('electron'), { app, BrowserWindow, ipcMain, globalShortcut, dialog, Menu, shell, clipboard } = electron;
+const electron = require('electron'), { app, BrowserWindow, ipcMain, Tray, dialog, Menu, shell, clipboard } = electron;
 const os = require('os');
 const url = require('url');
 const fs = require('fs');
@@ -17,7 +17,7 @@ const crypto = require('crypto'),
 const imgur = require('imgur');
 const moment = require('moment');
 
-const srcDir = 'file:///' + __dirname;
+const srcDir = 'file://' + __dirname;
 const assetsDir = `${srcDir}/assets`;
 const templatesDir = `${srcDir}/templates`;
 
@@ -40,9 +40,9 @@ const homeDir = path.join(os.homedir(), 'AppData', 'Local')
 			locale: 'en',
 			previousConversions: 10,
 			outputPath: defaultOutput,
-			useWinUi: 'no',
 			disableUpdateDialog: 'no',
-			disableGoogleAnalytics: 'no'
+			disableGoogleAnalytics: 'no',
+			minimizeToTray: 'no'
 		},
 		imgur: {
 			enabled: 'no',
@@ -55,6 +55,7 @@ const homeDir = path.join(os.homedir(), 'AppData', 'Local')
 }
 
 global.clientConfig;
+global.buildInfo = require('./build-info.json');
 
 let splashScreen;			//	Splash screen
 let mainWindow;			//	Main window
@@ -67,11 +68,11 @@ const initializer = () => {
 		loadConfig,
 		checkReleases,
 		loadMain,
+		createTray,
 		destroySplash
 	], (err) => {
 		if (err) console.trace(err);
 		mainWindow.show();
-
 		mainWindow.on('close', () => {
 			app.quit();
 		});
@@ -85,68 +86,6 @@ const initializer = () => {
 |	Startup functions
 |--------------------------------------------------------------------------
 */
-const loadMain = (cb) => {
-	console.log('Loading main window...');
-	mainWindow = new BrowserWindow({
-		minWidth: 800,
-		minHeight: 400,
-		backgroundColor: appBlack,
-		frame: false,
-		useContentSize: true,
-		show: false
-	});
-	mainWindow.loadURL(`${templatesDir}/main.html`);
-
-	mainWindow.on('ready-to-show', () => {
-		console.log('Main window loaded!');
-		cb(null);
-	});
-};
-const checkReleases = (cb) => {
-	console.log('Checking for new version...');
-	const apiUrl = "https://api.github.com/repos/depthbomb/JPEGoat/releases/latest";
-	request({
-		headers: {
-			'User-Agent': `Baaa! JPEGoat v${pkg.version}`
-		},
-		uri: apiUrl,
-		method: 'GET'
-	}, (e, r, b) => {
-		if (e) throw new Error (e);
-		let data = JSON.parse(b);
-		console.log('Got API data...');
-		if (data.tag_name > pkg.version) {
-			console.log('New version available', data.id);
-			if (clientConfig.app.disableUpdateDialog === 'yes') {
-				dialog.showMessageBox({
-					type: 'info',
-					title: 'Update available',
-					message: 'A new version of JPEGoat is available.',
-					detail: `${pkg.version} -> ${data.tag_name}`,
-					buttons: [
-						'Go to download page',
-						'Close'
-					],
-					cancelId: 1
-				}, response => {
-					if (response === 0) {
-						shell.openExternal(data.html_url);
-						app.quit();
-						cb(null);
-					} else {
-						cb(null);
-					}
-				});
-			} else {
-				console.log('Not showing update dialog because user has it disabled');
-				cb(null);
-			}
-		} else {
-			console.log('No new version available');
-			cb(null);
-		}
-	});
-};
 const createSplash = (cb) => {
 	console.log('Creating splash screen...');
 	splashScreen = new BrowserWindow({
@@ -229,6 +168,103 @@ const loadConfig = (cb) => {
 	global.clientConfig = ini.parse(fs.readFileSync(userConfigFile, 'utf-8'));
 	cb(null);
 };
+const checkReleases = (cb) => {
+	console.log('Checking for new version...');
+	const apiUrl = "https://api.github.com/repos/depthbomb/JPEGoat/releases/latest";
+	request({
+		headers: {
+			'User-Agent': `Baaa! JPEGoat v${pkg.version}`
+		},
+		uri: apiUrl,
+		method: 'GET'
+	}, (e, r, b) => {
+		if (e) throw new Error(e);
+		let data = JSON.parse(b);
+		console.log('Got API data...');
+		if (data.tag_name > pkg.version) {
+			console.log('New version available', data.id);
+			if (clientConfig.app.disableUpdateDialog === 'yes') {
+				dialog.showMessageBox({
+					type: 'info',
+					title: 'Update available',
+					message: 'A new version of JPEGoat is available.',
+					detail: `${pkg.version} -> ${data.tag_name}`,
+					buttons: [
+						'Go to download page',
+						'Close'
+					],
+					cancelId: 1
+				}, response => {
+					if (response === 0) {
+						shell.openExternal(data.html_url);
+						app.quit();
+						cb(null);
+					} else {
+						cb(null);
+					}
+				});
+			} else {
+				console.log('Not showing update dialog because user has it disabled');
+				cb(null);
+			}
+		} else {
+			console.log('No new version available');
+			cb(null);
+		}
+	});
+};
+const loadMain = (cb) => {
+	console.log('Loading main window...');
+	mainWindow = new BrowserWindow({
+		minWidth: 800,
+		minHeight: 400,
+		backgroundColor: appBlack,
+		frame: false,
+		useContentSize: true,
+		show: false
+	});
+	mainWindow.loadURL(`${templatesDir}/main.html`);
+	mainWindow.on('ready-to-show', () => {
+		console.log('Main window loaded!');
+		cb(null);
+	});
+	mainWindow.on('minimize', e => {
+		if (clientConfig.app.minimizeToTray === 'yes') {
+			e.preventDefault();
+			mainWindow.hide();
+		}
+	});
+};
+const createTray = (cb) => {
+	console.log('Creating tray icon...');
+	const trayIcon = path.join(__dirname, 'assets', 'img', 'icons', 'png', '16x16.png');
+	const contextMenu = Menu.buildFromTemplate([
+		{
+			label: `JPEGoat v${global.buildInfo.version}`,
+			icon: trayIcon,
+			enabled: false
+		},
+		{ type: 'separator' },
+		{
+			label: 'Quit',
+			click: () => {
+				app.quit();
+			}
+		}
+	]);
+
+	tray = new Tray(trayIcon);
+	tray.setToolTip('JPEGoat');
+	tray.setContextMenu(contextMenu);
+	tray.on('double-click', () => {
+		if (clientConfig.app.minimizeToTray === 'yes') {
+			if (!mainWindow.isVisible()) mainWindow.show();
+			else mainWindow.hide();
+		}
+	});
+
+	cb(null);
+};
 const destroySplash = (cb) => {
 	console.log('Destroying splash...');
 	splashScreen.destroy();
@@ -257,7 +293,7 @@ app.on('window-all-closed', () => {
 });
 app.on('before-quit', () => {
 	console.log('Caught [before-quit]');
-	//TODO: any cleaning up that needs to be done
+	tray.destroy();
 });
 /*
 |--------------------------------------------------------------------------
@@ -347,7 +383,7 @@ ipcMain.on('choose-image', (event, data) => {
 
 	event.sender.send('update-progress', { success: true, status: 'Waiting...', progress: '1%' });
 	event.sender.send('image-processing');
-	if (data.type === 'file') {
+	if (data.t === 'file') {
 		let filters = [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'bmp'] }];
 		let properties = ['openFile'];
 		dialog.showOpenDialog({ filters, properties }, (files) => {
@@ -365,9 +401,9 @@ ipcMain.on('choose-image', (event, data) => {
 				event.sender.send('update-progress', { success: true, complete: true });
 			}
 		});
-	} else if (data.type === 'url') {
+	} else if (data.t === 'url') {
 		let checkRegex = /^https?:\/\/(?:[a-z0-9\-]+\.)+[a-z]{2,6}(?:\/[^\/#?]+)+\.(?:jpg|gif|png|jpeg).*?$/i;
-		if (!checkRegex.test(data.content)) {
+		if (!checkRegex.test(data.c)) {
 			dialog.showMessageBox({
 				type: 'error',
 				title: 'Error',
@@ -377,7 +413,7 @@ ipcMain.on('choose-image', (event, data) => {
 				event.sender.send('update-progress', { success: true, complete: true });
 			});
 		} else {
-			processImage(data.content);
+			processImage(data.c);
 		}
 	} else {
 		// ???
@@ -469,11 +505,19 @@ ipcMain.on('win.close', (event) => {
 
 /*
 |--------------------------------------------------------------------------
-|	Generic quit event, [arg] must be true
+|	System events
 |--------------------------------------------------------------------------
 */
 ipcMain.on('sys.quit', (event, arg) => {
 	if (arg) app.quit();
+});
+ipcMain.on('sys.restart', (event, arg) => {
+	if (!arg) return;
+	let exec = require('child_process').exec
+	exec(process.argv.join(' '))
+	setTimeout(() => {
+		app.quit()
+	}, 50)
 });
 /*
 |--------------------------------------------------------------------------
@@ -493,6 +537,7 @@ ipcMain.on('log', (event, msg) => {
 /*
 |--------------------------------------------------------------------------
 */
+
 
 
 /*
